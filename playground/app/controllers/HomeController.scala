@@ -2,16 +2,16 @@ package controllers
 
 import actors.Actors
 import actors.HelloChildActor._
-import akka.actor.ActorSystem
 import akka.pattern._
 import akka.util.Timeout
+import dtos.ActorResultMessage
 import javax.inject._
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-
+import dtos.JsonFormats._
 
 @Singleton
 class HomeController @Inject()(actors: Actors, cc: ControllerComponents) extends AbstractController(cc) {
@@ -25,7 +25,7 @@ class HomeController @Inject()(actors: Actors, cc: ControllerComponents) extends
 		val jsonBody: JsValue = request.body
 
 		(actors.helloParentActor ? SayHello((jsonBody \ "name").as[String])).mapTo[String].map { message =>
-			Ok(message)
+			Ok(Json.toJson(ActorResultMessage(message, true)))
 		}
 
 	}
@@ -33,7 +33,7 @@ class HomeController @Inject()(actors: Actors, cc: ControllerComponents) extends
 	def config(path: String) = Action.async(parse.json) { implicit request =>
 
 		(actors.helloParentActor ? GetConfig(path)).mapTo[String].map { message =>
-			Ok(message)
+			Ok(Json.toJson(ActorResultMessage(message, false)))
 		}
 
 	}
