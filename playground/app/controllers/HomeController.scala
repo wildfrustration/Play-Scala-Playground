@@ -1,7 +1,8 @@
 package controllers
 
-import actors.Actors
+import actors.{Actors, HelloParentActor2}
 import actors.HelloChildActor._
+import akka.actor.ActorSystem
 import akka.pattern._
 import akka.util.Timeout
 import dtos.ActorResultMessage
@@ -14,7 +15,7 @@ import scala.concurrent.duration._
 import dtos.JsonFormats._
 
 @Singleton
-class HomeController @Inject()(actors: Actors, cc: ControllerComponents) extends AbstractController(cc) {
+class HomeController @Inject()(actors: Actors, system: ActorSystem, cc: ControllerComponents) extends AbstractController(cc) {
 
 	implicit val timeout: Timeout = 15.seconds
     implicit val ec: ExecutionContext = ExecutionContext.global
@@ -24,7 +25,9 @@ class HomeController @Inject()(actors: Actors, cc: ControllerComponents) extends
 		//val body: AnyContent = request.body
 		val jsonBody: JsValue = request.body
 
-		(actors.helloParentActor ? SayHello((jsonBody \ "name").as[String])).mapTo[String].map { message =>
+		val parent = system.actorOf(HelloParentActor2.props, "HelloParentActor2")
+
+		(parent ? SayHello((jsonBody \ "name").as[String])).mapTo[String].map { message =>
 			Ok(Json.toJson(ActorResultMessage(message, true)))
 		}
 

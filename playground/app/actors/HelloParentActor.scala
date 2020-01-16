@@ -16,6 +16,10 @@ class HelloParentActor @Inject()(helloChildFactory: HelloChildActor.Factory) ext
 	implicit val timeout: Timeout = 15.seconds
 	implicit val ec: ExecutionContext = ExecutionContext.global
 
+	override def preStart(): Unit = {
+		println("PRE START")
+	}
+
 	def receive = {
 
 		case SayHello(name: String) => {
