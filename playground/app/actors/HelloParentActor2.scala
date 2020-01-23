@@ -9,7 +9,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 
-class HelloParentActor2 extends Actor with InjectedActorSupport {
+class HelloParentActor2 extends Actor {
 
 	import actors.HelloChildActor._
 	implicit val timeout: Timeout = 15.seconds

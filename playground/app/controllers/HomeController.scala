@@ -1,21 +1,24 @@
 package controllers
 
-import actors.{Actors, HelloParentActor2}
 import actors.HelloChildActor._
+import actors.{Actors, HelloParentActor2, MyWebSocketActor}
 import akka.actor.ActorSystem
 import akka.pattern._
+import akka.stream.Materializer
 import akka.util.Timeout
 import dtos.ActorResultMessage
-import javax.inject._
+import dtos.JsonFormats._
+import javax.inject.{Inject, _}
 import play.api.libs.json.{JsValue, Json}
+import play.api.libs.streams.ActorFlow
+import play.api.mvc.WebSocket.MessageFlowTransformer
 import play.api.mvc._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import dtos.JsonFormats._
 
 @Singleton
-class HomeController @Inject()(actors: Actors, system: ActorSystem, cc: ControllerComponents) extends AbstractController(cc) {
+class HomeController @Inject()(actors: Actors, cc: ControllerComponents)(implicit system: ActorSystem, mat: Materializer) extends AbstractController(cc) {
 
 	implicit val timeout: Timeout = 15.seconds
     implicit val ec: ExecutionContext = ExecutionContext.global
@@ -40,4 +43,13 @@ class HomeController @Inject()(actors: Actors, system: ActorSystem, cc: Controll
 		}
 
 	}
+
+	implicit val messageFlowTransformer = MessageFlowTransformer.jsonMessageFlowTransformer[ActorResultMessage, ActorResultMessage]
+
+	def socket = WebSocket.accept[ActorResultMessage, ActorResultMessage] { request =>
+		ActorFlow.actorRef { out =>
+			MyWebSocketActor.props(out)
+		}
+	}
+
 }
