@@ -14,19 +14,20 @@ import play.api.libs.streams.ActorFlow
 import play.api.mvc.WebSocket.MessageFlowTransformer
 import play.api.mvc._
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class HomeController @Inject()(actors: Actors, cc: ControllerComponents)(implicit system: ActorSystem, mat: Materializer) extends AbstractController(cc) {
+class HomeController @Inject()(actors: Actors, pa: Protected)(implicit system: ActorSystem, mat: Materializer, val controllerComponents: ControllerComponents) extends ProtectedAction {
 
 	implicit val timeout: Timeout = 15.seconds
-    implicit val ec: ExecutionContext = ExecutionContext.global
 
-	def greeter() = Action.async(parse.json) { implicit request =>
+	def greeter() = pa.async(parse.json) { implicit request =>
 
 		//val body: AnyContent = request.body
 		val jsonBody: JsValue = request.body
+
+		logger.error(s"JsonBody: $jsonBody")
 
 		val parent = system.actorOf(HelloParentActor2.props, "HelloParentActor2")
 
